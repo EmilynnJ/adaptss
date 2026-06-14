@@ -1,46 +1,31 @@
 # SoulSeer Launch Checklist
 
-Code is complete and builds. These items require your accounts / external dashboards.
+Repo: github.com/EmilynnJ/adaptss · Code is production-level, type-checks, builds, and was run end-to-end against the live Neon DB + Redis.
 
-## 1. Database (Neon)
-- [ ] Create a CLEAN Neon database or branch for this build (do not reuse the old one with leftover tables).
-- [ ] Put its connection string in `server/.env` as `NEON_DB_CONNECTION_STRING`.
-- [ ] Run `npm run db:push` then `npm run db:seed`.
+## DONE (verified live by Adapt)
+- [x] Monorepo (shared/server/client), TypeScript strict, builds clean.
+- [x] Neon connected. App tables live in a dedicated `soulseer` Postgres schema (isolated from the legacy tables already in that database). Migration: `server/drizzle/0000_init.sql`. Admin + 2 sample readers seeded.
+- [x] Redis connected (active-session billing state; no cron jobs).
+- [x] Stripe secret key verified (charges enabled). Top-up PaymentIntent + signature-verified webhook wired.
+- [x] Agora token generation verified (App ID + certificate valid). RTC (voice/video) + RTM (chat) wired client-side.
+- [x] Auth0 verified (JWKS reachable, domain dev-2x1dti3irhuz62jc.us.auth0.com). JWT validation on all protected routes; role in DB; user sync on first login.
+- [x] Client build embeds real VITE config (Auth0, Stripe publishable, Agora App ID).
+- [x] Production single-process: Express serves the built client + API on one PORT.
+- [x] Admin create-reader generates an initial password and creates the Auth0 login (when M2M is configured) + Stripe Connect account + onboarding link.
+- [x] Chat transcript persistence at session end; GDPR account-deletion endpoint + UI.
 
-## 2. Auth0
-- [ ] Create a Single Page Application + an API (audience) in your Auth0 tenant.
-- [ ] Enable Google and Apple social connections (Apple is required for App Store).
-- [ ] Enable email/password database connection.
-- [ ] Allowed Callback/Logout/Web Origins must include your client URL(s).
-- [ ] Set `VITE_AUTH0_DOMAIN_URL`, `VITE_AUTH0_CLIENT_ID`, `VITE_AUTH0_AUDIENCE`, `VITE_AUTH0_REDIRECT_URI` (client) and `AUTH0_DOMAIN`, `AUTH0_AUDIENCE` (server).
-- [ ] For admin-created readers: create their Auth0 user (email + initial password). On first login the account auto-links by email.
+## REQUIRES YOUR DASHBOARD ACTION (not code — external accounts)
+- [ ] **Stripe Connect**: enable Connect on your Stripe account (dashboard.stripe.com/connect). Until then reader creation still works but payout/onboarding is skipped. Code is ready.
+- [ ] **Cloudinary**: set `CLOUDINARY_CLOUD_NAME` (only API key + secret are in env). Until then, upload reader images by pasting an image URL in the create/edit reader form.
+- [ ] **Auth0 (full auto reader creation)**: provide an Auth0 M2M app with `create:users`/`delete:users` scopes as `AUTH0_MGMT_CLIENT_ID` / `AUTH0_MGMT_CLIENT_SECRET`. Without it, the app falls back: admin creates the reader's Auth0 login manually (auto-links by email on first login).
+- [ ] **Auth0 config**: add Google + Apple social connections; set Allowed Callback/Logout/Web Origins to your deployed client URL(s).
+- [ ] **Stripe webhook**: add endpoint -> POST /api/webhooks/stripe, event `payment_intent.succeeded`; confirm `STRIPE_WEBHOOK_SIGNING_SECRET`.
+- [ ] **Community links**: set `VITE_DISCORD_INVITE_URL` and `VITE_FACEBOOK_GROUP_URL`.
 
-## 3. Stripe
-- [ ] Use live keys: `STRIPE_SECRET_KEY`, `VITE_STRIPE_PUBLISHABLE_KEY`.
-- [ ] Enable Stripe Connect (Express) on your platform account for reader payouts.
-- [ ] Add a webhook endpoint -> `POST /api/webhooks/stripe`, subscribe to `payment_intent.succeeded`, and set `STRIPE_WEBHOOK_SIGNING_SECRET`.
+## DEPLOY
+- Build: `npm install && npm run build`  ·  Start: `NODE_ENV=production npm start`
+- Server env: copy `.env.example`, fill values (use the Neon connection string; the app targets the `soulseer` schema automatically).
+- Client build env: provide `VITE_*` vars (or a `client/.env`) at build time so Vite embeds them. For single-origin deploy leave `VITE_API_BASE_URL` empty.
 
-## 4. Agora
-- [ ] One Agora project with the App Certificate enabled (token auth).
-- [ ] Set `AGORA_APP_ID` / `VITE_AGORA_APP_ID` and `AGORA_SECURITY_CERTIFICATE`.
-
-## 5. Cloudinary
-- [ ] Set `CLOUDINARY_CLOUD_NAME` (missing from current env), `CLOUDINARY_API_KEY`, `CLOUDINARY_SECRET`.
-
-## 6. Redis
-- [ ] Provide `REDIS_DB_HOST/PORT/USERNAME/PASSWORD` (managed Redis recommended in prod).
-
-## 7. Community links
-- [ ] Set `VITE_DISCORD_INVITE_URL` and `VITE_FACEBOOK_GROUP_URL` to the real SoulSeer communities.
-
-## 8. App Store submission (native wrapper)
-This is a React web app. The Apple App Store needs a native binary. Recommended path:
-- [ ] Wrap with **Capacitor** (`@capacitor/ios`), point it at the built client.
-- [ ] Configure Sign in with Apple in the native shell + Auth0.
-- [ ] Apple Developer account, app icons/splash, privacy nutrition labels, and review submission.
-- [ ] Note: pay-per-minute readings are services, not digital goods, so Stripe (not Apple IAP) is generally acceptable — confirm against current App Store Review Guidelines for your category before submission.
-
-## 9. Pre-launch hardening (build guide §16.12-13)
-- [ ] Set production CORS origin, rotate any test secrets.
-- [ ] Load/penetration test billing, disconnect, and low-balance edge cases.
-- [ ] QA mobile responsiveness at 375 / 768 / 1280 px.
+## APP STORE (native wrapper — your stated final step)
+- Wrap the built client with Capacitor (`@capacitor/ios`), configure Sign in with Apple, app icons/splash, privacy labels; submit via your Apple Developer account.
