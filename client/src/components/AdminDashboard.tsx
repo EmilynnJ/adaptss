@@ -125,12 +125,18 @@ function BalanceAdjust({ userId, onDone }: { userId: number; onDone: () => void 
   );
 }
 
+type CreatedReader = { email: string; initialPassword: string; auth0Created: boolean; stripeOnboardingUrl?: string };
+
 function CreateReader({ onDone }: { onDone: () => void }) {
   const [f, setF] = useState({ email: "", username: "", fullName: "", bio: "", specialties: "", pricingChat: "1.99", pricingVoice: "2.99", pricingVideo: "3.99", profileImage: "" });
+  const [created, setCreated] = useState<CreatedReader | null>(null);
+  const [busy, setBusy] = useState(false);
   const toast = useToast();
+
   const submit = async () => {
+    setBusy(true);
     try {
-      const res = await api.post<{ stripeOnboardingUrl?: string }>("/api/admin/readers", {
+      const res = await api.post<{ stripeOnboardingUrl?: string; initialPassword: string; auth0Created: boolean }>("/api/admin/readers", {
         email: f.email, username: f.username, fullName: f.fullName, bio: f.bio,
         specialties: f.specialties.split(",").map((s) => s.trim()).filter(Boolean),
         pricingChat: Math.round(parseFloat(f.pricingChat) * 100),
@@ -138,14 +144,48 @@ function CreateReader({ onDone }: { onDone: () => void }) {
         pricingVideo: Math.round(parseFloat(f.pricingVideo) * 100),
         profileImage: f.profileImage || undefined,
       });
-      toast("Reader created. Create their Auth0 login next.", "success");
-      if (res.stripeOnboardingUrl) window.open(res.stripeOnboardingUrl, "_blank");
+      setCreated({ email: f.email, initialPassword: res.initialPassword, auth0Created: res.auth0Created, stripeOnboardingUrl: res.stripeOnboardingUrl });
+      toast("Reader created", "success");
       onDone();
     } catch (e) { toast((e as Error).message, "error"); }
+    finally { setBusy(false); }
   };
+
+  const copyCreds = () => {
+    if (!created) return;
+    navigator.clipboard?.writeText(`SoulSeer reader login\nEmail: ${created.email}\nTemporary password: ${created.initialPassword}\nLog in at: ${window.location.origin}/login`);
+    toast("Credentials copied", "success");
+  };
+
+  if (created) {
+    return (
+      <div className="card" style={{ borderColor: "var(--gold)" }}>
+        <h3>Reader Created — Give These Credentials to the Reader</h3>
+        <p className="muted" style={{ fontSize: ".85rem" }}>This password is shown once. Share it securely with the reader; they log in at /login and should change it after first sign-in.</p>
+        <div className="card" style={{ background: "#0e0c14" }}>
+          <div className="row"><strong style={{ width: 110 }}>Email</strong><code>{created.email}</code></div>
+          <div className="row"><strong style={{ width: 110 }}>Password</strong><code style={{ color: "var(--gold)", fontSize: "1.05rem" }}>{created.initialPassword}</code></div>
+          <div className="row"><strong style={{ width: 110 }}>Login URL</strong><code>{window.location.origin}/login</code></div>
+        </div>
+        <p className="muted" style={{ fontSize: ".8rem", marginTop: 8 }}>
+          {created.auth0Created
+            ? "Auth0 login was created automatically — the reader can sign in right now with these credentials."
+            : "Auth0 M2M is not configured, so create this login once in your Auth0 tenant (email + the password above). It auto-links to this profile by email on first sign-in."}
+          {created.stripeOnboardingUrl ? " A Stripe Connect onboarding link was generated for payouts." : ""}
+        </p>
+        <div className="row" style={{ marginTop: 10 }}>
+          <button className="btn" onClick={copyCreds}>Copy Credentials</button>
+          {created.stripeOnboardingUrl && <a className="btn btn-gold" href={created.stripeOnboardingUrl} target="_blank" rel="noreferrer">Open Stripe Onboarding</a>}
+          <button className="btn btn-ghost" onClick={() => { setCreated(null); setF({ email: "", username: "", fullName: "", bio: "", specialties: "", pricingChat: "1.99", pricingVoice: "2.99", pricingVideo: "3.99", profileImage: "" }); }}>Create Another</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="card">
       <h3>Create Reader</h3>
+      <p className="muted" style={{ fontSize: ".8rem" }}>Reader accounts can only be created here. A temporary password is generated for you to give the reader. (Self-signup users are always clients.)</p>
       {(["fullName", "email", "username", "specialties", "profileImage"] as const).map((k) => (
         <input key={k} className="input" style={{ marginBottom: 8 }} placeholder={k === "specialties" ? "Specialties (comma separated)" : k === "profileImage" ? "Profile image URL (or upload via edit)" : k} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
       ))}
@@ -156,8 +196,7 @@ function CreateReader({ onDone }: { onDone: () => void }) {
             <input className="input" style={{ width: 90 }} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} /></label>
         ))}
       </div>
-      <button className="btn" style={{ marginTop: 10 }} onClick={submit}>Create Reader</button>
-      <p className="muted" style={{ fontSize: ".8rem" }}>After creating, add the reader's login in your Auth0 tenant (email + initial password) and send them the Stripe Connect onboarding link.</p>
+      <button className="btn" style={{ marginTop: 10 }} disabled={busy} onClick={submit}>{busy ? "Creating…" : "Create Reader"}</button>
     </div>
   );
 }
