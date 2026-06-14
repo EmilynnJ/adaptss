@@ -1,0 +1,31 @@
+{
+  "name": "soulseer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SoulSeer - Pay-per-minute spiritual readings & community",
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "build:shared": "npm run build -w shared",
+    "build:server": "npm run build -w server",
+    "build:client": "npm run build -w client",
+    "build": "npm run build:shared && npm run build:server && npm run build:client",
+    "dev:server": "npm run dev -w server",
+    "dev:client": "npm run dev -w client",
+    "typecheck": "npm run typecheck -w shared && npm run typecheck -w server && npm run typecheck -w client",
+    "db:generate": "npm run db:generate -w server",
+    "db:push": "npm run db:push -w server",
+    "db:seed": "npm run db:seed -w server",
+    "start": "npm run start -w server"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10",
+    "drizzle-orm": "^0.45.2"
+  }
+}

@@ -1,0 +1,69 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { api } from "../lib/api.js";
+import { fmtUSD, fmtDate } from "../lib/format.js";
+import { AddFunds } from "./AddFunds.js";
+import type { Reading, Transaction, User } from "@soulseer/shared";
+
+export function ClientDashboard({ me }: { me: User }) {
+  const [balance, setBalance] = useState(me.accountBalance);
+  const [readings, setReadings] = useState<Reading[]>([]);
+  const [active, setActive] = useState<Reading[]>([]);
+  const [txns, setTxns] = useState<Transaction[]>([]);
+  const [showFunds, setShowFunds] = useState(false);
+
+  const refresh = () => {
+    api.get<{ accountBalance: number }>("/api/user/balance", true).then((d) => setBalance(d.accountBalance)).catch(() => {});
+    api.get<Reading[]>("/api/readings/client", true).then(setReadings).catch(() => {});
+    api.get<Reading[]>("/api/readings/active", true).then(setActive).catch(() => {});
+    api.get<Transaction[]>("/api/transactions", true).then(setTxns).catch(() => {});
+  };
+  useEffect(refresh, []);
+
+  return (
+    <div>
+      <div className="card">
+        <div className="row">
+          <div><div className="muted">Account Balance</div><h2 style={{ margin: 0 }}>{fmtUSD(balance)}</h2></div>
+          <span className="spacer" />
+          <button className="btn btn-gold" onClick={() => setShowFunds((v) => !v)}>Add Funds</button>
+        </div>
+        {showFunds && <div style={{ marginTop: 14 }}><AddFunds onDone={() => { setShowFunds(false); setTimeout(refresh, 1500); }} /></div>}
+      </div>
+
+      {active.length > 0 && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <h3>Active & Pending</h3>
+          {active.map((r) => (
+            <div className="row" key={r.id}>
+              <span>#{r.id} · {r.type} · {r.status}</span><span className="spacer" />
+              <Link to={`/reading/${r.id}`} className="btn">Open</Link>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>Reading History</h3>
+        {readings.filter((r) => r.status === "completed").map((r) => (
+          <div className="row" key={r.id} style={{ borderBottom: "1px solid rgba(255,255,255,.06)", padding: "6px 0" }}>
+            <span>{fmtDate(r.completedAt)} · {r.type}</span><span className="spacer" />
+            <span>{r.duration} min</span><span className="price">{fmtUSD(r.totalPrice)}</span>
+          </div>
+        ))}
+        {readings.filter((r) => r.status === "completed").length === 0 && <p className="muted">No completed readings yet.</p>}
+      </div>
+
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>Transactions</h3>
+        {txns.map((t) => (
+          <div className="row" key={t.id} style={{ fontSize: ".9rem", padding: "4px 0" }}>
+            <span className="muted">{fmtDate(t.createdAt)}</span><span>{t.type}</span><span className="spacer" />
+            <span className={t.amount >= 0 ? "price" : ""}>{t.amount >= 0 ? "+" : ""}{fmtUSD(t.amount)}</span>
+          </div>
+        ))}
+        {txns.length === 0 && <p className="muted">No transactions yet.</p>}
+      </div>
+    </div>
+  );
+}
