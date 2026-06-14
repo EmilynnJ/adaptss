@@ -136,7 +136,7 @@ export default function ReadingSession({ me }: { me: User | null }) {
 
   const end = async () => {
     if (!window.confirm("End this session?")) return;
-    try { await api.post(`/api/readings/${readingId}/end`, {}); } catch { /* ignore */ }
+    try { await api.post(`/api/readings/${readingId}/end`, reading?.type === "chat" ? { transcript: messages } : {}); } catch { /* ignore */ }
     setEnded(true); leaveMedia(); if (!isReader) setShowRating(true);
   };
 

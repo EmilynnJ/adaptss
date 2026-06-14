@@ -6,6 +6,7 @@ import { checkJwt, loadUser, requireUser, requireRole } from "../middleware/auth
 import { validateBody } from "../middleware/validate.js";
 import { updateStatusSchema, updatePricingSchema, updateProfileSchema } from "@soulseer/shared";
 import { HttpError } from "../middleware/errors.js";
+import { deleteAuth0User } from "../integrations/auth0Mgmt.js";
 
 const r = Router();
 
@@ -111,6 +112,27 @@ r.get(
   checkJwt, loadUser, requireUser,
   asyncHandler(async (req, res) => {
     res.json({ accountBalance: req.userRecord!.accountBalance });
+  })
+);
+
+// DELETE /api/user/account — GDPR/CCPA account deletion (anonymize, keep audit ledger)
+r.delete(
+  "/user/account",
+  checkJwt, loadUser, requireUser,
+  asyncHandler(async (req, res) => {
+    const u = req.userRecord!;
+    if (u.role === "admin") throw new HttpError(403, "Admin accounts cannot self-delete");
+    if (u.auth0Id) await deleteAuth0User(u.auth0Id);
+    await db.update(schema.users).set({
+      email: `deleted_${u.id}@soulseer.invalid`,
+      username: `deleted_${u.id}`,
+      fullName: "Deleted User",
+      bio: null,
+      profileImage: null,
+      auth0Id: null,
+      isOnline: false,
+    }).where(eq(schema.users.id, u.id));
+    res.json({ deleted: true });
   })
 );
 

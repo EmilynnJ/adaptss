@@ -9,6 +9,7 @@ import { HttpError } from "../middleware/errors.js";
 import { adjustBalance, recordPayout } from "../services/ledger.js";
 import { stripe, createConnectAccount, createOnboardingLink } from "../integrations/stripe.js";
 import { uploadReaderImage } from "../integrations/cloudinary.js";
+import { createAuth0User, generatePassword } from "../integrations/auth0Mgmt.js";
 import { env } from "../config/env.js";
 import { logger } from "../utils/logger.js";
 
@@ -45,16 +46,25 @@ r.post("/readers", validateBody(createReaderSchema), asyncHandler(async (req, re
     logger.warn({ err: String(e) }, "stripe connect creation failed (continuing)");
   }
 
+  // Generate an initial password and create the reader's Auth0 login (if M2M configured).
+  const initialPassword = generatePassword();
+  const auth0Id = await createAuth0User(body.email, initialPassword, body.fullName);
+
   const [reader] = await db.insert(schema.users).values({
     email: body.email, username: body.username, fullName: body.fullName, role: "reader",
     bio: body.bio ?? null, specialties: body.specialties ?? [], profileImage: imageUrl ?? null,
     pricingChat: body.pricingChat, pricingVoice: body.pricingVoice, pricingVideo: body.pricingVideo,
-    stripeAccountId,
+    stripeAccountId, auth0Id: auth0Id ?? undefined,
   }).returning();
 
-  // NOTE: Admin must also create the Auth0 user (email + initial password) in the
-  // Auth0 tenant; on first login the sub is auto-linked by email in /auth/sync.
-  res.status(201).json({ reader: { ...reader, stripeAccountId: undefined }, stripeOnboardingUrl: onboardingUrl });
+  // If Auth0 user creation succeeded, the login is ready. Otherwise the admin must
+  // create the login in Auth0 manually (on first login the sub auto-links by email).
+  res.status(201).json({
+    reader: { ...reader, stripeAccountId: undefined },
+    stripeOnboardingUrl: onboardingUrl,
+    initialPassword,
+    auth0Created: Boolean(auth0Id),
+  });
 }));
 
 // PATCH /api/admin/readers/:id

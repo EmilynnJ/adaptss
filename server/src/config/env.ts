@@ -15,6 +15,10 @@ function opt(name: string, fallback = ""): string {
   return process.env[name] ?? fallback;
 }
 
+function host(v: string): string {
+  return v.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+}
+
 export const env = {
   nodeEnv: opt("NODE_ENV", "development"),
   isProd: process.env.NODE_ENV === "production",
@@ -34,7 +38,7 @@ export const env = {
 
   // Auth0
   auth0: {
-    domain: opt("AUTH0_DOMAIN") || opt("VITE_AUTH0_DOMAIN_URL"),
+    domain: host(opt("AUTH0_DOMAIN") || opt("VITE_AUTH0_DOMAIN_URL")),
     audience: opt("AUTH0_AUDIENCE") || opt("VITE_AUTH0_AUDIENCE"),
     mgmtClientId: opt("AUTH0_MGMT_CLIENT_ID") || opt("AUTH0_APP_ID"),
     mgmtClientSecret: opt("AUTH0_MGMT_CLIENT_SECRET") || opt("AUTH0_CLIENT_SECRET"),
@@ -58,5 +62,13 @@ export const env = {
     cloudName: opt("CLOUDINARY_CLOUD_NAME"),
     apiKey: opt("CLOUDINARY_API_KEY"),
     apiSecret: opt("CLOUDINARY_SECRET"),
+  },
+
+  // Backblaze B2 (S3-compatible) fallback for image storage
+  backblaze: {
+    keyId: opt("BACKBLAZE_APP_ID"),
+    appKey: opt("BACKBLAZE_APP_KEY"),
+    bucket: opt("BACKBLAZE_BUCKET"),
+    endpoint: opt("BACKBLAZE_ENDPOINT"),
   },
 };

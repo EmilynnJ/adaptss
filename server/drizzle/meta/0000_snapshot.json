@@ -1,12 +1,12 @@
 {
-  "id": "b58f8449-e702-4e3b-8208-cae8ac05f060",
+  "id": "af24111f-a056-4820-88ff-7cd7bbae7c63",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.forum_comments": {
+    "soulseer.forum_comments": {
       "name": "forum_comments",
-      "schema": "",
+      "schema": "soulseer",
       "columns": {
         "id": {
           "name": "id",
@@ -60,6 +60,7 @@
           "name": "forum_comments_post_id_forum_posts_id_fk",
           "tableFrom": "forum_comments",
           "tableTo": "forum_posts",
+          "schemaTo": "soulseer",
           "columnsFrom": [
             "post_id"
           ],
@@ -73,6 +74,7 @@
           "name": "forum_comments_user_id_users_id_fk",
           "tableFrom": "forum_comments",
           "tableTo": "users",
+          "schemaTo": "soulseer",
           "columnsFrom": [
             "user_id"
           ],
@@ -89,9 +91,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.forum_flags": {
+    "soulseer.forum_flags": {
       "name": "forum_flags",
-      "schema": "",
+      "schema": "soulseer",
       "columns": {
         "id": {
           "name": "id",
@@ -143,6 +145,7 @@
           "name": "forum_flags_post_id_forum_posts_id_fk",
           "tableFrom": "forum_flags",
           "tableTo": "forum_posts",
+          "schemaTo": "soulseer",
           "columnsFrom": [
             "post_id"
           ],
@@ -156,6 +159,7 @@
           "name": "forum_flags_comment_id_forum_comments_id_fk",
           "tableFrom": "forum_flags",
           "tableTo": "forum_comments",
+          "schemaTo": "soulseer",
           "columnsFrom": [
             "comment_id"
           ],
@@ -169,6 +173,7 @@
           "name": "forum_flags_reporter_id_users_id_fk",
           "tableFrom": "forum_flags",
           "tableTo": "users",
+          "schemaTo": "soulseer",
           "columnsFrom": [
             "reporter_id"
           ],
@@ -185,9 +190,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.forum_posts": {
+    "soulseer.forum_posts": {
       "name": "forum_posts",
-      "schema": "",
+      "schema": "soulseer",
       "columns": {
         "id": {
           "name": "id",
@@ -216,7 +221,7 @@
         "category": {
           "name": "category",
           "type": "forum_category",
-          "typeSchema": "public",
+          "typeSchema": "soulseer",
           "primaryKey": false,
           "notNull": true,
           "default": "'General'"
@@ -280,6 +285,7 @@
           "name": "forum_posts_user_id_users_id_fk",
           "tableFrom": "forum_posts",
           "tableTo": "users",
+          "schemaTo": "soulseer",
           "columnsFrom": [
             "user_id"
           ],
@@ -296,9 +302,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.messages": {
+    "soulseer.messages": {
       "name": "messages",
-      "schema": "",
+      "schema": "soulseer",
       "columns": {
         "id": {
           "name": "id",
@@ -333,7 +339,7 @@
         "billing": {
           "name": "billing",
           "type": "message_billing",
-          "typeSchema": "public",
+          "typeSchema": "soulseer",
           "primaryKey": false,
           "notNull": true,
           "default": "'free'"
@@ -394,6 +400,7 @@
           "name": "messages_client_id_users_id_fk",
           "tableFrom": "messages",
           "tableTo": "users",
+          "schemaTo": "soulseer",
           "columnsFrom": [
             "client_id"
           ],
@@ -407,6 +414,7 @@
           "name": "messages_reader_id_users_id_fk",
           "tableFrom": "messages",
           "tableTo": "users",
+          "schemaTo": "soulseer",
           "columnsFrom": [
             "reader_id"
           ],
@@ -420,6 +428,7 @@
           "name": "messages_sender_id_users_id_fk",
           "tableFrom": "messages",
           "tableTo": "users",
+          "schemaTo": "soulseer",
           "columnsFrom": [
             "sender_id"
           ],
@@ -433,6 +442,7 @@
           "name": "messages_reading_id_readings_id_fk",
           "tableFrom": "messages",
           "tableTo": "readings",
+          "schemaTo": "soulseer",
           "columnsFrom": [
             "reading_id"
           ],
@@ -449,9 +459,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.newsletter_signups": {
+    "soulseer.newsletter_signups": {
       "name": "newsletter_signups",
-      "schema": "",
+      "schema": "soulseer",
       "columns": {
         "id": {
           "name": "id",
@@ -489,9 +499,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.readings": {
+    "soulseer.readings": {
       "name": "readings",
-      "schema": "",
+      "schema": "soulseer",
       "columns": {
         "id": {
           "name": "id",
@@ -514,14 +524,14 @@
         "type": {
           "name": "type",
           "type": "reading_type",
-          "typeSchema": "public",
+          "typeSchema": "soulseer",
           "primaryKey": false,
           "notNull": true
         },
         "status": {
           "name": "status",
           "type": "reading_status",
-          "typeSchema": "public",
+          "typeSchema": "soulseer",
           "primaryKey": false,
           "notNull": true,
           "default": "'pending'"
@@ -561,7 +571,7 @@
         "payment_status": {
           "name": "payment_status",
           "type": "payment_status",
-          "typeSchema": "public",
+          "typeSchema": "soulseer",
           "primaryKey": false,
           "notNull": true,
           "default": "'pending'"
@@ -645,6 +655,7 @@
           "name": "readings_reader_id_users_id_fk",
           "tableFrom": "readings",
           "tableTo": "users",
+          "schemaTo": "soulseer",
           "columnsFrom": [
             "reader_id"
           ],
@@ -658,6 +669,7 @@
           "name": "readings_client_id_users_id_fk",
           "tableFrom": "readings",
           "tableTo": "users",
+          "schemaTo": "soulseer",
           "columnsFrom": [
             "client_id"
           ],
@@ -674,9 +686,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.transactions": {
+    "soulseer.transactions": {
       "name": "transactions",
-      "schema": "",
+      "schema": "soulseer",
       "columns": {
         "id": {
           "name": "id",
@@ -693,7 +705,7 @@
         "type": {
           "name": "type",
           "type": "transaction_type",
-          "typeSchema": "public",
+          "typeSchema": "soulseer",
           "primaryKey": false,
           "notNull": true
         },
@@ -778,6 +790,7 @@
           "name": "transactions_user_id_users_id_fk",
           "tableFrom": "transactions",
           "tableTo": "users",
+          "schemaTo": "soulseer",
           "columnsFrom": [
             "user_id"
           ],
@@ -791,6 +804,7 @@
           "name": "transactions_reading_id_readings_id_fk",
           "tableFrom": "transactions",
           "tableTo": "readings",
+          "schemaTo": "soulseer",
           "columnsFrom": [
             "reading_id"
           ],
@@ -807,9 +821,9 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.users": {
+    "soulseer.users": {
       "name": "users",
-      "schema": "",
+      "schema": "soulseer",
       "columns": {
         "id": {
           "name": "id",
@@ -844,7 +858,7 @@
         "role": {
           "name": "role",
           "type": "user_role",
-          "typeSchema": "public",
+          "typeSchema": "soulseer",
           "primaryKey": false,
           "notNull": true,
           "default": "'client'"
@@ -986,9 +1000,9 @@
     }
   },
   "enums": {
-    "public.forum_category": {
+    "soulseer.forum_category": {
       "name": "forum_category",
-      "schema": "public",
+      "schema": "soulseer",
       "values": [
         "General",
         "Readings",
@@ -997,26 +1011,26 @@
         "Announcements"
       ]
     },
-    "public.message_billing": {
+    "soulseer.message_billing": {
       "name": "message_billing",
-      "schema": "public",
+      "schema": "soulseer",
       "values": [
         "free",
         "charged"
       ]
     },
-    "public.payment_status": {
+    "soulseer.payment_status": {
       "name": "payment_status",
-      "schema": "public",
+      "schema": "soulseer",
       "values": [
         "pending",
         "paid",
         "refunded"
       ]
     },
-    "public.reading_status": {
+    "soulseer.reading_status": {
       "name": "reading_status",
-      "schema": "public",
+      "schema": "soulseer",
       "values": [
         "pending",
         "accepted",
@@ -1025,18 +1039,18 @@
         "cancelled"
       ]
     },
-    "public.reading_type": {
+    "soulseer.reading_type": {
       "name": "reading_type",
-      "schema": "public",
+      "schema": "soulseer",
       "values": [
         "chat",
         "voice",
         "video"
       ]
     },
-    "public.transaction_type": {
+    "soulseer.transaction_type": {
       "name": "transaction_type",
-      "schema": "public",
+      "schema": "soulseer",
       "values": [
         "top_up",
         "reading_charge",
@@ -1045,9 +1059,9 @@
         "adjustment"
       ]
     },
-    "public.user_role": {
+    "soulseer.user_role": {
       "name": "user_role",
-      "schema": "public",
+      "schema": "soulseer",
       "values": [
         "client",
         "reader",
@@ -1055,7 +1069,9 @@
       ]
     }
   },
-  "schemas": {},
+  "schemas": {
+    "soulseer": "soulseer"
+  },
   "sequences": {},
   "roles": {},
   "policies": {},

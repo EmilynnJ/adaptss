@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { api } from "../lib/api.js";
 import { fmtUSD, fmtDate } from "../lib/format.js";
 import { AddFunds } from "./AddFunds.js";
+import { useToast } from "../lib/toast.js";
+import { useAuth0 } from "@auth0/auth0-react";
 import type { Reading, Transaction, User } from "@soulseer/shared";
 
 export function ClientDashboard({ me }: { me: User }) {
@@ -11,6 +13,8 @@ export function ClientDashboard({ me }: { me: User }) {
   const [active, setActive] = useState<Reading[]>([]);
   const [txns, setTxns] = useState<Transaction[]>([]);
   const [showFunds, setShowFunds] = useState(false);
+  const toast = useToast();
+  const { logout } = useAuth0();
 
   const refresh = () => {
     api.get<{ accountBalance: number }>("/api/user/balance", true).then((d) => setBalance(d.accountBalance)).catch(() => {});
@@ -52,6 +56,16 @@ export function ClientDashboard({ me }: { me: User }) {
           </div>
         ))}
         {readings.filter((r) => r.status === "completed").length === 0 && <p className="muted">No completed readings yet.</p>}
+      </div>
+
+      <div className="card" style={{ marginTop: 16, borderColor: "rgba(224,85,106,0.4)" }}>
+        <h3>Privacy</h3>
+        <p className="muted" style={{ fontSize: ".85rem" }}>You can permanently delete your account (GDPR/CCPA). This anonymizes your profile and removes your login.</p>
+        <button className="btn btn-ghost" onClick={async () => {
+          if (!window.confirm("Permanently delete your account? This cannot be undone.")) return;
+          try { await api.del("/api/user/account"); toast("Account deleted", "success"); logout({ logoutParams: { returnTo: window.location.origin } }); }
+          catch (e) { toast((e as Error).message, "error"); }
+        }}>Delete My Account</button>
       </div>
 
       <div className="card" style={{ marginTop: 16 }}>

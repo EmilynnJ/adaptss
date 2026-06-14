@@ -1,5 +1,5 @@
 import {
-  pgTable,
+  pgSchema,
   serial,
   integer,
   text,
@@ -7,30 +7,33 @@ import {
   boolean,
   timestamp,
   jsonb,
-  pgEnum,
   index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
+// All SoulSeer tables live in a dedicated Postgres schema to isolate them
+// from legacy tables in this Neon database.
+export const ss = pgSchema("soulseer");
+
 // ----------------------------- Enums -----------------------------
-export const userRoleEnum = pgEnum("user_role", ["client", "reader", "admin"]);
-export const readingTypeEnum = pgEnum("reading_type", ["chat", "voice", "video"]);
-export const readingStatusEnum = pgEnum("reading_status", [
+export const userRoleEnum = ss.enum("user_role", ["client", "reader", "admin"]);
+export const readingTypeEnum = ss.enum("reading_type", ["chat", "voice", "video"]);
+export const readingStatusEnum = ss.enum("reading_status", [
   "pending",
   "accepted",
   "in_progress",
   "completed",
   "cancelled",
 ]);
-export const paymentStatusEnum = pgEnum("payment_status", ["pending", "paid", "refunded"]);
-export const transactionTypeEnum = pgEnum("transaction_type", [
+export const paymentStatusEnum = ss.enum("payment_status", ["pending", "paid", "refunded"]);
+export const transactionTypeEnum = ss.enum("transaction_type", [
   "top_up",
   "reading_charge",
   "reader_credit",
   "payout",
   "adjustment",
 ]);
-export const forumCategoryEnum = pgEnum("forum_category", [
+export const forumCategoryEnum = ss.enum("forum_category", [
   "General",
   "Readings",
   "Spiritual Growth",
@@ -38,11 +41,11 @@ export const forumCategoryEnum = pgEnum("forum_category", [
   "Announcements",
 ]);
 // Premium messaging (per build guide addendum)
-export const messageBillingEnum = pgEnum("message_billing", ["free", "charged"]);
+export const messageBillingEnum = ss.enum("message_billing", ["free", "charged"]);
 
 // ----------------------------- Users -----------------------------
 // Monetary values stored as integers (cents). Timestamps with timezone.
-export const users = pgTable(
+export const users = ss.table(
   "users",
   {
     id: serial("id").primaryKey(),
@@ -73,7 +76,7 @@ export const users = pgTable(
 );
 
 // ----------------------------- Readings -----------------------------
-export const readings = pgTable(
+export const readings = ss.table(
   "readings",
   {
     id: serial("id").primaryKey(),
@@ -111,7 +114,7 @@ export type ChatMessage = {
 };
 
 // ----------------------------- Transactions -----------------------------
-export const transactions = pgTable(
+export const transactions = ss.table(
   "transactions",
   {
     id: serial("id").primaryKey(),
@@ -136,7 +139,7 @@ export const transactions = pgTable(
 // ----------------------------- Premium Messaging -----------------------------
 // Client can message any reader for free. Reader decides if their reply is free
 // or charged; charged replies require the client to have sufficient funds to open.
-export const messages = pgTable(
+export const messages = ss.table(
   "messages",
   {
     id: serial("id").primaryKey(),
@@ -164,7 +167,7 @@ export const messages = pgTable(
 );
 
 // ----------------------------- Forum -----------------------------
-export const forumPosts = pgTable(
+export const forumPosts = ss.table(
   "forum_posts",
   {
     id: serial("id").primaryKey(),
@@ -184,7 +187,7 @@ export const forumPosts = pgTable(
   })
 );
 
-export const forumComments = pgTable("forum_comments", {
+export const forumComments = ss.table("forum_comments", {
   id: serial("id").primaryKey(),
   postId: integer("post_id")
     .notNull()
@@ -198,7 +201,7 @@ export const forumComments = pgTable("forum_comments", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const forumFlags = pgTable("forum_flags", {
+export const forumFlags = ss.table("forum_flags", {
   id: serial("id").primaryKey(),
   postId: integer("post_id").references(() => forumPosts.id),
   commentId: integer("comment_id").references(() => forumComments.id),
@@ -211,7 +214,7 @@ export const forumFlags = pgTable("forum_flags", {
 });
 
 // Newsletter signups (home page)
-export const newsletterSignups = pgTable("newsletter_signups", {
+export const newsletterSignups = ss.table("newsletter_signups", {
   id: serial("id").primaryKey(),
   email: varchar("email", { length: 320 }).notNull().unique(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

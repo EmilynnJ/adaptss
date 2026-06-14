@@ -118,7 +118,13 @@ r.post(
   ...auth,
   asyncHandler(async (req, res) => {
     const id = Number(req.params.id);
-    await getParticipantReading(req, id);
+    const reading = await getParticipantReading(req, id);
+    // For chat sessions, persist the transcript sent by the client (content only;
+    // never trusted for billing). Billing duration is always server-side.
+    if (reading.type === "chat" && Array.isArray(req.body?.transcript)) {
+      const transcript = (req.body.transcript as unknown[]).slice(0, 2000);
+      await db.update(schema.readings).set({ chatTranscript: transcript as never }).where(eq(schema.readings.id, id));
+    }
     await endSession(id, "ended_by_participant");
     const [updated] = await db.select().from(schema.readings).where(eq(schema.readings.id, id)).limit(1);
     res.json(updated);
